@@ -1,0 +1,14 @@
+import { Header } from "@/components/layouts/Header";
+
+export default function MarketingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <Header />
+      <main>{children}</main>
+    </>
+  );
+}
