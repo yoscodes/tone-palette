@@ -1,14 +1,11 @@
-import { Header } from "@/components/layouts/Header";
+import { Noto_Sans_JP } from 'next/font/google'
 
-export default function MarketingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <>
-      <Header />
-      <main>{children}</main>
-    </>
-  );
+const noto = Noto_Sans_JP({
+  weight: ['400', '500', '700', '900'],
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+  return <div className={noto.className}>{children}</div>
 }

@@ -1,10 +1,12 @@
-import { Header } from "@/components/layouts/Header";
+import { AppSidebar } from "@/components/layouts/AppSidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <Header />
-      <main className="container mx-auto px-4 py-8">{children}</main>
-    </>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#f2f2f6" }}>
+      <AppSidebar />
+      <main style={{ flex: 1, overflowY: "auto" }}>
+        {children}
+      </main>
+    </div>
   );
 }
