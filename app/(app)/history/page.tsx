@@ -114,9 +114,7 @@ export default async function HistoryPage() {
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 900, color: "#1c1f2b", margin: 0 }}>生成履歴</h1>
           <p style={{ fontSize: 13, color: "#7a7e90", fontWeight: 500, marginTop: 4 }}>
-            {generations.length === 0
-              ? "まだ生成履歴がありません"
-              : `${generations.length} 件の生成履歴`}
+            過去に生成した表現を確認できます
           </p>
         </div>
         <Link
@@ -140,7 +138,7 @@ export default async function HistoryPage() {
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎨</div>
           <p style={{ fontSize: 15, color: "#7a7e90", fontWeight: 500, lineHeight: 1.7 }}>
             まだ生成履歴がありません。<br />
-            ダッシュボードから最初の変換を試してみましょう。
+            「新規作成」から最初の変換を試してみましょう。
           </p>
           <Link
             href="/dashboard"

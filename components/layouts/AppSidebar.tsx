@@ -169,9 +169,7 @@ export function AppSidebar() {
           }} />
         </div>
         <p style={{ fontSize: 11, color: "#9295a8", fontWeight: 500, marginBottom: 12 }}>
-          {limit === Infinity
-            ? "無制限"
-            : `残り ${remaining} 回 / ${limit} 回`}
+          {limit === Infinity ? "無制限" : `残り ${remaining} 回`}
         </p>
 
         {/* アップグレードボタン（Freeプランのみ）*/}

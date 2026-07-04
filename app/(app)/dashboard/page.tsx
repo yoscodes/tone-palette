@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import DashboardClient, { type HistoryItem } from "./DashboardClient";
+import DashboardClient, { type HistoryItem, type Preset } from "./DashboardClient";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -22,5 +26,21 @@ export default async function DashboardPage() {
     formality:   row.formality,
   }));
 
-  return <DashboardClient initialHistory={initialHistory} />;
+  const { data: presetsData } = await supabase
+    .from("recipient_presets")
+    .select("id, name, formality, intimacy")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true });
+
+  const initialPresets: Preset[] = presetsData ?? [];
+
+  const { checkout } = await searchParams;
+
+  return (
+    <DashboardClient
+      initialHistory={initialHistory}
+      initialPresets={initialPresets}
+      checkoutSuccess={checkout === "success"}
+    />
+  );
 }

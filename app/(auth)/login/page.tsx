@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { login } from "../actions";
 
 const Logo = () => (
@@ -15,8 +17,10 @@ const Logo = () => (
   </div>
 );
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, action, pending] = useActionState(login, null);
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
 
   return (
     <div style={{ minHeight: "100vh", background: "#f2f2f6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", fontFamily: "'Noto Sans JP', sans-serif" }}>
@@ -32,9 +36,9 @@ export default function LoginPage() {
         <div style={{ background: "#fff", borderRadius: 22, padding: "36px 32px", boxShadow: "0 12px 40px rgba(70,60,120,.1)" }}>
           <form action={action} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
-            {state?.error && (
+            {(urlError || state?.error) && (
               <div style={{ background: "rgba(248,90,90,.08)", border: "1px solid rgba(248,90,90,.25)", borderRadius: 12, padding: "12px 16px", fontSize: 13, color: "#c0392b", fontWeight: 500 }}>
-                {state.error}
+                {urlError ?? state?.error}
               </div>
             )}
 
@@ -93,5 +97,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

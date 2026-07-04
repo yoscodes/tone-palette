@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { savePreset, deletePreset } from "./presetActions";
 
 // ─── 定数 ─────────────────────────────────────────────────────
 const GRADIENT     = "linear-gradient(135deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 66%,#6a82fb 100%)";
@@ -25,6 +27,13 @@ export interface HistoryItem {
   formality: number;
 }
 
+export interface Preset {
+  id: string;
+  name: string;
+  formality: number;
+  intimacy: number;
+}
+
 // ─── パレット選択 UI ─────────────────────────────────────────
 function PaletteSelector({
   formality, intimacy, onChange,
@@ -38,7 +47,10 @@ function PaletteSelector({
   const updateFromPointer = useCallback((e: React.PointerEvent | PointerEvent) => {
     if (!sqRef.current) return;
     const r = sqRef.current.getBoundingClientRect();
-    onChange(clamp((e.clientX - r.left) / r.width), clamp((e.clientY - r.top) / r.height));
+    onChange(
+      clamp((e.clientX - r.left) / r.width),
+      clamp(1 - (e.clientY - r.top) / r.height),
+    );
   }, [onChange]);
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -53,10 +65,10 @@ function PaletteSelector({
   return (
     <div style={{ position: "relative", padding: "32px 56px 40px", touchAction: "none" }}>
       {[
-        { text: "フランク（親密）",          style: { position: "absolute" as const, top: 4,  left: "50%", transform: "translateX(-50%)", textAlign: "center" as const } },
-        { text: "カジュアル\n（くだけた）",   style: { position: "absolute" as const, left: 0, top: "50%",  transform: "translateY(-50%)", textAlign: "center" as const, width: 48, lineHeight: 1.3 } },
-        { text: "フォーマル\n（かしこまった）", style: { position: "absolute" as const, right: 0, top: "50%", transform: "translateY(-50%)", textAlign: "center" as const, width: 48, lineHeight: 1.3 } },
-        { text: "丁寧（標準的）",             style: { position: "absolute" as const, bottom: 6, left: "50%", transform: "translateX(-50%)" } },
+        { text: "近い",               style: { position: "absolute" as const, top: 4,  left: "50%", transform: "translateX(-50%)", textAlign: "center" as const } },
+        { text: "カジュアル",          style: { position: "absolute" as const, left: 0, top: "50%", transform: "translateY(-50%)", textAlign: "center" as const, width: 48, lineHeight: 1.3 } },
+        { text: "フォーマル\n（敬意）", style: { position: "absolute" as const, right: 0, top: "50%", transform: "translateY(-50%)", textAlign: "center" as const, width: 48, lineHeight: 1.3 } },
+        { text: "距離を置く",          style: { position: "absolute" as const, bottom: 6, left: "50%", transform: "translateX(-50%)" } },
       ].map(({ text, style }) => (
         <span key={text} style={{ ...style, fontSize: 9.5, fontWeight: 700, color: "#a3a6b8", whiteSpace: "pre-line" }}>
           {text}
@@ -69,6 +81,16 @@ function PaletteSelector({
       >
         <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", width: 1.5, background: "rgba(255,255,255,.45)" }} />
         <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 1.5, background: "rgba(255,255,255,.45)" }} />
+        {[
+          { label: "友人・同期",   s: { top: "7%",  left: "7%" } },
+          { label: "親しい先輩",   s: { top: "7%",  right: "7%" } },
+          { label: "初対面の方",   s: { bottom: "7%", left: "7%" } },
+          { label: "社外の役員",   s: { bottom: "7%", right: "7%" } },
+        ].map(({ label, s }) => (
+          <span key={label} style={{ position: "absolute", ...s, fontSize: 8.5, fontWeight: 700, color: "rgba(255,255,255,.55)", pointerEvents: "none" }}>
+            {label}
+          </span>
+        ))}
         <div style={{
           position: "absolute",
           left: `${(formality * 100).toFixed(1)}%`,
@@ -78,8 +100,13 @@ function PaletteSelector({
           background: "rgba(255,255,255,.92)", boxShadow: "0 4px 14px rgba(0,0,0,.28)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a78c8" strokeWidth="2">
-            <path d="M7 7l-3 3 3 3M17 7l3 3-3 3M7 10h10" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a78c8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="5,9 2,12 5,15"/>
+            <polyline points="9,5 12,2 15,5"/>
+            <polyline points="15,19 12,22 9,19"/>
+            <polyline points="19,9 22,12 19,15"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <line x1="12" y1="2" x2="12" y2="22"/>
           </svg>
         </div>
       </div>
@@ -118,7 +145,16 @@ function MiniHistoryCard({ item, onRestore }: { item: HistoryItem; onRestore: (t
 }
 
 // ─── メイン ──────────────────────────────────────────────────
-export default function DashboardClient({ initialHistory }: { initialHistory: HistoryItem[] }) {
+export default function DashboardClient({
+  initialHistory,
+  initialPresets,
+  checkoutSuccess,
+}: {
+  initialHistory: HistoryItem[];
+  initialPresets: Preset[];
+  checkoutSuccess?: boolean;
+}) {
+  const router = useRouter();
   // 入力
   const [inputText, setInputText] = useState("");
   const [situation, setSituation] = useState(SITUATIONS[0]);
@@ -136,7 +172,43 @@ export default function DashboardClient({ initialHistory }: { initialHistory: Hi
   // DBから復元した履歴を初期値とし、セッションで生成したものを先頭に追加
   const [history, setHistory] = useState<HistoryItem[]>(initialHistory);
 
+  // 相手プリセット
+  const [presets,      setPresets]      = useState<Preset[]>(initialPresets);
+  const [savingMode,   setSavingMode]   = useState(false);
+  const [presetName,   setPresetName]   = useState("");
+  const [presetSaving, setPresetSaving] = useState(false);
+
+  useEffect(() => {
+    if (!checkoutSuccess) return;
+    toast.success("Proプランへのアップグレードが完了しました！", {
+      description: "月30回の生成をご利用いただけます。",
+    });
+    router.replace("/dashboard");
+  }, [checkoutSuccess, router]);
+
   const badge = output ? safetyBadge(formality) : null;
+
+  const handleSavePreset = async () => {
+    const name = presetName.trim();
+    if (!name || presetSaving) return;
+    setPresetSaving(true);
+    const result = await savePreset(name, formality, intimacy);
+    setPresetSaving(false);
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+    if ("preset" in result && result.preset) {
+      setPresets(prev => [...prev, result.preset!]);
+    }
+    setPresetName("");
+    setSavingMode(false);
+  };
+
+  const handleDeletePreset = async (id: string) => {
+    setPresets(prev => prev.filter(p => p.id !== id));
+    await deletePreset(id);
+  };
 
   const handleGenerate = async () => {
     if (!inputText.trim() || loading) return;
@@ -248,6 +320,91 @@ export default function DashboardClient({ initialHistory }: { initialHistory: Hi
             />
           </div>
 
+          {/* 相手プリセット */}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#a3a6b8", letterSpacing: "0.05em", textTransform: "uppercase", flexShrink: 0 }}>
+                相手
+              </span>
+              {presets.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => { setFormality(p.formality); setIntimacy(p.intimacy); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    border: "1.5px solid #e4e6f0", borderRadius: 999,
+                    background: "#f7f7fb", padding: "4px 10px 4px 12px",
+                    fontSize: 12, fontWeight: 600, color: "#3a3d50",
+                    cursor: "pointer", transition: "border-color .15s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "#b06ab3")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "#e4e6f0")}
+                >
+                  {p.name}
+                  <span
+                    onClick={e => { e.stopPropagation(); handleDeletePreset(p.id); }}
+                    style={{ fontSize: 11, color: "#b0b3c5", lineHeight: 1, padding: "0 2px", cursor: "pointer" }}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = "#f05")}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = "#b0b3c5")}
+                  >
+                    ×
+                  </span>
+                </button>
+              ))}
+
+              {savingMode ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <input
+                    autoFocus
+                    value={presetName}
+                    onChange={e => setPresetName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") handleSavePreset(); if (e.key === "Escape") { setSavingMode(false); setPresetName(""); } }}
+                    placeholder="例: 田中部長"
+                    maxLength={20}
+                    style={{
+                      border: "1.5px solid #b06ab3", borderRadius: 999,
+                      padding: "4px 12px", fontSize: 12, fontFamily: "inherit",
+                      outline: "none", color: "#1c1f2b", width: 110,
+                    }}
+                  />
+                  <button
+                    onClick={handleSavePreset}
+                    disabled={!presetName.trim() || presetSaving}
+                    style={{
+                      border: "none", borderRadius: 999, padding: "5px 12px",
+                      fontSize: 12, fontWeight: 700, color: "#fff",
+                      background: (!presetName.trim() || presetSaving) ? "#c5c8d8" : "linear-gradient(95deg,#ff7e5f 0%,#b06ab3 55%,#6a7bf0 100%)",
+                      cursor: (!presetName.trim() || presetSaving) ? "not-allowed" : "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {presetSaving ? "…" : "保存"}
+                  </button>
+                  <button
+                    onClick={() => { setSavingMode(false); setPresetName(""); }}
+                    style={{ border: "none", background: "none", fontSize: 14, color: "#a3a6b8", cursor: "pointer", padding: "4px" }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSavingMode(true)}
+                  style={{
+                    border: "1.5px dashed #d4c9f0", borderRadius: 999,
+                    background: "none", padding: "4px 12px",
+                    fontSize: 12, fontWeight: 600, color: "#9a78c8",
+                    cursor: "pointer", transition: "border-color .15s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "#b06ab3")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "#d4c9f0")}
+                >
+                  ＋ 保存
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* エラー */}
           {error && (
             <div style={{ marginTop: 12, background: "rgba(248,90,90,.08)", border: "1px solid rgba(248,90,90,.22)", borderRadius: 10, padding: "10px 14px", fontSize: 12.5, color: "#c0392b", fontWeight: 500 }}>
@@ -338,13 +495,17 @@ export default function DashboardClient({ initialHistory }: { initialHistory: Hi
               </>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", minHeight: 180, textAlign: "center", gap: 10 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: GRADIENT, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
-                    <path d="M12 5v14M5 12h14" />
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(176,106,179,.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b06ab3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="13.5" cy="6.5" r="2.5"/>
+                    <circle cx="17.5" cy="10.5" r="2.5"/>
+                    <circle cx="8.5" cy="7.5" r="2.5"/>
+                    <circle cx="6.5" cy="12.5" r="2.5"/>
+                    <path d="M22 20c-3-3-6.5-5-10-5S5 17 2 20"/>
                   </svg>
                 </div>
                 <p style={{ fontSize: 13.5, color: "#9295a8", fontWeight: 500, lineHeight: 1.65 }}>
-                  左で文章を入力して<br />「トーンを変換する」を押してください
+                  文章を入力してトーンを変換すると、<br />ここに結果が表示されます
                 </p>
               </div>
             )}
