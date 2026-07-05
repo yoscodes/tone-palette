@@ -165,6 +165,7 @@ export default function DashboardClient({
   const [output,       setOutput]       = useState<string | null>(null);
   const [editedOutput, setEditedOutput] = useState<string>("");
   const [toneLabel,    setToneLabel]    = useState<string | null>(null);
+  const [reason,       setReason]       = useState<string | null>(null);
   const [remaining,    setRemaining]    = useState<number | null>(null);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState<string | null>(null);
@@ -216,32 +217,72 @@ export default function DashboardClient({
     setError(null);
     setOutput(null);
     setEditedOutput("");
+    setReason(null);
 
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText, formality, intimacy: 1 - intimacy, situation }),
+        // ② intimacy の符号修正（Y軸反転修正後はそのまま渡す）
+        body: JSON.stringify({ text: inputText, formality, intimacy, situation }),
       });
-      const data = await res.json();
 
+      // ストリーム開始前のエラー（認証・上限等）は JSON で返る
       if (!res.ok) {
+        const data = await res.json();
         setError(data.error ?? "エラーが発生しました");
         return;
       }
 
-      setOutput(data.output);
-      setEditedOutput(data.output);
-      setToneLabel(data.toneLabel);
-      setRemaining(data.remaining);
+      // ② SSE ストリームを読む
+      const reader  = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer      = "";
+      let accumulated = "";
 
-      setHistory(prev => [{
-        id: crypto.randomUUID(),
-        input_text:  inputText,
-        output_text: data.output,
-        tone_label:  data.toneLabel,
-        formality,
-      }, ...prev].slice(0, 20));
+      const processMessage = (dataStr: string) => {
+        try {
+          const data = JSON.parse(dataStr);
+
+          if (data.error) {
+            setError(data.error);
+            return;
+          }
+
+          if (data.chunk) {
+            accumulated += data.chunk;
+            // メタデータ JSON 行（改行以降）は表示しない
+            const splitIdx = accumulated.indexOf("\n");
+            const display  = splitIdx !== -1 ? accumulated.slice(0, splitIdx) : accumulated;
+            if (display) { setOutput(display); setEditedOutput(display); }
+          }
+
+          if (data.done) {
+            setToneLabel(data.toneLabel ?? null);
+            // ④ reason を状態にセット
+            setReason(data.reason ?? null);
+            setRemaining(data.remaining ?? null);
+            if (data.historyItem) {
+              setHistory(prev => [data.historyItem, ...prev].slice(0, 20));
+              setOutput(data.historyItem.output_text);
+              setEditedOutput(data.historyItem.output_text);
+            }
+          }
+        } catch {}
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+        for (const part of parts) {
+          if (part.startsWith("data: ")) processMessage(part.slice(6).trim());
+        }
+      }
+    } catch {
+      setError("通信エラーが発生しました");
     } finally {
       setLoading(false);
     }
@@ -475,6 +516,22 @@ export default function DashboardClient({
                 <p style={{ fontSize: 10.5, color: "#b0b3c5", marginTop: 5, fontWeight: 500 }}>
                   送信前に自由に編集できます
                 </p>
+
+                {/* ④ 変換の「なぜ」 */}
+                {reason && (
+                  <div style={{
+                    marginTop: 12, background: "#f7f4ff", borderRadius: 10,
+                    padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: 8,
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7b6ad0" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    <p style={{ fontSize: 12, color: "#5a5270", fontWeight: 500, margin: 0, lineHeight: 1.65 }}>
+                      {reason}
+                    </p>
+                  </div>
+                )}
 
                 <button
                   onClick={handleCopy}
