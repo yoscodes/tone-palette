@@ -306,7 +306,11 @@ export default function DashboardClient({
       </div>
 
       {/* 2カラムグリッド */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+      <style>{`
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        @media (max-width: 768px) { .dash-grid { grid-template-columns: 1fr; } }
+      `}</style>
+      <div className="dash-grid">
 
         {/* ── 左：入力パネル ── */}
         <div style={{ background: "#fff", borderRadius: 20, padding: "24px", boxShadow: "0 6px 24px rgba(70,60,120,.07)" }}>

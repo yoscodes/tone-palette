@@ -47,18 +47,148 @@ export default function LandingPage() {
   return (
     <div style={{ width: '100%', background: '#f2f2f6', overflow: 'hidden', color: '#1f2230', WebkitFontSmoothing: 'antialiased' }}>
 
+      <style>{`
+        /* ── HEADER ── */
+        .lp-header-inner { max-width: 1080px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; gap: 28px; }
+        .lp-nav { display: flex; align-items: center; gap: 24px; margin-left: 18px; font-size: 14px; font-weight: 500; color: #4a4d60; white-space: nowrap; }
+        .lp-header-right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+        .lp-login { font-size: 14px; font-weight: 500; color: #4a4d60; text-decoration: none; }
+        .lp-signup { text-decoration: none; font-size: 13.5px; font-weight: 700; color: #fff; padding: 10px 18px; border-radius: 999px; white-space: nowrap; background: linear-gradient(95deg,#ff7e5f 0%,#b06ab3 55%,#6a7bf0 100%); box-shadow: 0 6px 16px rgba(150,90,200,.28); }
+        @media (max-width: 768px) {
+          .lp-nav { display: none; }
+          .lp-header-right { gap: 10px; }
+          .lp-signup { font-size: 12px; padding: 8px 12px; }
+          .lp-header-inner { gap: 16px; }
+        }
+        @media (max-width: 480px) {
+          .lp-login { display: none; }
+          .lp-header-inner { padding: 12px 16px; }
+        }
+
+        /* ── HERO ── */
+        .lp-hero-grid { max-width: 1080px; margin: 0 auto; padding: 64px 28px 80px; display: grid; grid-template-columns: 1fr 1.18fr; gap: 48px; align-items: center; position: relative; }
+        .lp-hero-h1 { margin-top: 22px; font-size: 46px; line-height: 1.3; font-weight: 900; letter-spacing: -0.01em; color: #222536; }
+        @media (max-width: 900px) {
+          .lp-hero-grid { grid-template-columns: 1fr; padding: 48px 28px 60px; gap: 40px; }
+          .lp-hero-demo { display: none; }
+          .lp-hero-h1 { font-size: 36px; margin-top: 16px; }
+        }
+        @media (max-width: 640px) {
+          .lp-hero-grid { padding: 36px 20px 48px; }
+          .lp-hero-h1 { font-size: 30px; }
+        }
+        @media (max-width: 480px) {
+          .lp-hero-grid { padding: 28px 16px 40px; }
+          .lp-hero-h1 { font-size: 26px; }
+        }
+
+        /* ── PAIN GRID ── */
+        .pain-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        .pain-card { display: flex; flex-direction: column; overflow: hidden; }
+        .pain-card-media { display: flex; align-items: center; justify-content: center; padding: 36px 28px 24px; }
+        .pain-card-body { flex: 1; min-width: 0; padding: 4px 28px 36px; display: flex; flex-direction: column; }
+        @media (max-width: 768px) {
+          .pain-grid { grid-template-columns: 1fr; }
+          .pain-card { flex-direction: row; }
+          .pain-card-media { flex-shrink: 0; width: 140px; padding: 28px 20px; }
+          .pain-card-body { padding: 28px 24px; justify-content: center; }
+        }
+        @media (max-width: 480px) {
+          .pain-card { flex-direction: column; }
+          .pain-card-media { width: 100%; padding: 32px 28px 20px; }
+          .pain-card-body { padding: 4px 28px 32px; }
+        }
+
+        /* ── SECTION PADDING ── */
+        .lp-section { padding: 80px 0; }
+        .lp-section-inner { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+        @media (max-width: 640px) {
+          .lp-section { padding: 56px 0; }
+          .lp-section-inner { padding: 0 16px; }
+        }
+        @media (max-width: 480px) {
+          .lp-section { padding: 44px 0; }
+        }
+
+        /* ── FEATURES BENTO ── */
+        .lp-bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+        .lp-b1 { grid-column: span 7; }
+        .lp-b2 { grid-column: span 5; }
+        .lp-b3 { grid-column: span 5; }
+        .lp-b4 { grid-column: span 7; }
+        @media (max-width: 900px) {
+          .lp-bento { grid-template-columns: 1fr 1fr; gap: 14px; }
+          .lp-b1, .lp-b2, .lp-b3, .lp-b4 { grid-column: span 1; }
+        }
+        @media (max-width: 580px) {
+          .lp-bento { grid-template-columns: 1fr; }
+        }
+
+        /* ── HOW IT WORKS ── */
+        .lp-how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; position: relative; }
+        .lp-how-line { position: absolute; top: 32px; left: 16.7%; right: 16.7%; height: 2px; background: linear-gradient(90deg,#ff7e5f,#b06ab3,#6a7bf0); border-radius: 1px; z-index: 0; }
+        @media (max-width: 640px) {
+          .lp-how-grid { grid-template-columns: 1fr; gap: 40px; }
+          .lp-how-line { display: none; }
+        }
+
+        /* ── SITUATIONS ── */
+        .lp-sit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+        .lp-sit-see-all { font-size: 13px; font-weight: 700; color: #7b6ad0; text-decoration: none; white-space: nowrap; }
+        .lp-sit-cmp { background: #fff; border-radius: 20px; padding: 28px; box-shadow: 0 8px 28px rgba(120,90,200,.1); display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 26px; align-items: center; }
+        @media (max-width: 900px) {
+          .lp-sit-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+          .lp-sit-cmp { grid-template-columns: 1fr; }
+          .lp-sit-palette, .lp-sit-phone { display: none; }
+        }
+
+        /* ── PRICING ── */
+        .lp-pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 20px; align-items: start; }
+        .lp-pro-card { border-radius: 22px; padding: 3px; background: linear-gradient(95deg,#ff7e5f 0%,#b06ab3 55%,#6a7bf0 100%); box-shadow: 0 20px 60px rgba(150,90,200,.3); position: relative; transform: scale(1.03); z-index: 1; }
+        @media (max-width: 900px) {
+          .lp-pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+          .lp-pro-card { transform: none; }
+        }
+
+        /* ── CTA ── */
+        .lp-cta-section { max-width: 1080px; margin: 0 auto; padding: 60px 28px; }
+        .lp-cta-inner { border-radius: 28px; padding: 48px 52px; background: linear-gradient(105deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 68%,#6a82fb 100%); display: flex; align-items: center; justify-content: space-between; gap: 40px; box-shadow: 0 24px 60px rgba(150,90,200,.3); position: relative; overflow: hidden; }
+        .lp-cta-h2 { font-size: 28px; font-weight: 900; color: #fff; line-height: 1.35; }
+        .lp-cta-checks { margin-top: 18px; display: flex; gap: 20px; font-size: 13px; color: #fff; font-weight: 600; flex-wrap: wrap; }
+        @media (max-width: 768px) {
+          .lp-cta-section { padding: 40px 20px; }
+          .lp-cta-inner { flex-direction: column; align-items: stretch; padding: 36px 28px; gap: 28px; }
+        }
+        @media (max-width: 480px) {
+          .lp-cta-section { padding: 32px 16px; }
+          .lp-cta-inner { padding: 28px 20px; border-radius: 20px; }
+          .lp-cta-checks { flex-direction: column; gap: 8px; }
+          .lp-cta-h2 { font-size: 22px; }
+        }
+
+        /* ── FOOTER ── */
+        .lp-footer-inner { max-width: 1080px; margin: 0 auto; padding: 32px 28px 48px; display: flex; align-items: center; gap: 30px; }
+        .lp-footer-nav { display: flex; gap: 26px; font-size: 13px; font-weight: 500; color: #6b6f82; }
+        .lp-footer-social { margin-left: auto; display: flex; gap: 14px; color: #8a8ea0; }
+        @media (max-width: 640px) {
+          .lp-footer-inner { flex-wrap: wrap; gap: 20px; padding: 28px 20px 40px; }
+          .lp-footer-social { margin-left: 0; }
+          .lp-footer-nav { flex-wrap: wrap; gap: 14px; }
+        }
+      `}</style>
+
       {/* ===== HEADER ===== */}
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(242,242,246,.82)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(20,20,40,.05)' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 28 }}>
+        <div className="lp-header-inner">
           <Logo />
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 24, marginLeft: 18, fontSize: 14, fontWeight: 500, color: '#4a4d60', whiteSpace: 'nowrap' }}>
+          <nav className="lp-nav">
             {[['#features','機能'],['#how','使い方'],['#usecase','ユースケース'],['#pricing','料金プラン'],['#faq','よくある質問']].map(([h,l]) => (
               <a key={h} href={h} style={{ color: 'inherit', textDecoration: 'none' }}>{l}</a>
             ))}
           </nav>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 18 }}>
-            <a href="/login" style={{ fontSize: 14, fontWeight: 500, color: '#4a4d60', textDecoration: 'none' }}>ログイン</a>
-            <a href="/signup" style={{ textDecoration: 'none', fontSize: 13.5, fontWeight: 700, color: '#fff', padding: '10px 18px', borderRadius: 999, whiteSpace: 'nowrap', background: GRADIENT_BTN, boxShadow: '0 6px 16px rgba(150,90,200,.28)' }}>
+          <div className="lp-header-right">
+            <a href="/login" className="lp-login">ログイン</a>
+            <a href="/signup" className="lp-signup">
               アーリーアクセスに登録する
             </a>
           </div>
@@ -67,17 +197,16 @@ export default function LandingPage() {
 
       {/* ===== HERO ===== */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Decorative orbs */}
         <div style={{ position: 'absolute', top: -80, right: -60, width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(176,106,179,.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -40, left: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(106,123,240,.14) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', top: 120, left: '40%', width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,126,95,.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '64px 28px 80px', display: 'grid', gridTemplateColumns: '1fr 1.18fr', gap: 48, alignItems: 'center', position: 'relative' }}>
+        <div className="lp-hero-grid">
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 999, background: '#fff', border: '1px solid rgba(180,120,210,.25)', boxShadow: '0 2px 8px rgba(120,90,170,.08)', fontSize: 12.5, fontWeight: 700, color: '#6b4f9e' }}>
               <span style={{ fontSize: 14 }}>✦</span> AIが文脈と相手に合わせて、最適な表現を提案
             </div>
-            <h1 style={{ marginTop: 22, fontSize: 46, lineHeight: 1.3, fontWeight: 900, letterSpacing: '-0.01em', color: '#222536' }}>
+            <h1 className="lp-hero-h1">
               言葉の迷いをゼロにする、<br />ビジネス表現の<br />
               <span style={{ background: 'linear-gradient(95deg,#ff7e5f,#f857a6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>カラー</span>
               <span style={{ background: 'linear-gradient(95deg,#b06ab3,#6a7bf0)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>パレット</span>
@@ -92,30 +221,15 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          <HeroDemoCard />
+          <div className="lp-hero-demo">
+            <HeroDemoCard />
+          </div>
         </div>
       </section>
 
       {/* ===== PAIN — dark section ===== */}
-      <style>{`
-        .pain-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-        .pain-card { display: flex; flex-direction: column; overflow: hidden; }
-        .pain-card-media { display: flex; align-items: center; justify-content: center; padding: 36px 28px 24px; }
-        .pain-card-body { flex: 1; min-width: 0; padding: 4px 28px 36px; display: flex; flex-direction: column; }
-        @media (max-width: 768px) {
-          .pain-grid { grid-template-columns: 1fr; }
-          .pain-card { flex-direction: row; }
-          .pain-card-media { flex-shrink: 0; width: 140px; padding: 28px 20px; }
-          .pain-card-body { padding: 28px 24px 28px; justify-content: center; }
-        }
-        @media (max-width: 480px) {
-          .pain-card { flex-direction: column; }
-          .pain-card-media { width: 100%; padding: 32px 28px 20px; }
-          .pain-card-body { padding: 4px 28px 32px; }
-        }
-      `}</style>
-      <section style={{ background: '#16192a', padding: '80px 0' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 28px' }}>
+      <section className="lp-section" style={{ background: '#16192a' }}>
+        <div className="lp-section-inner">
           <div style={{ textAlign: 'center' }}>
             <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 999, background: 'rgba(255,126,95,.15)', border: '1px solid rgba(255,126,95,.3)', fontSize: 12.5, fontWeight: 700, color: '#ff9170', marginBottom: 18 }}>
               あなただけじゃない
@@ -151,8 +265,8 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FEATURES — bento grid ===== */}
-      <section id="features" style={{ background: '#f2f2f6', padding: '80px 0 60px' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 28px' }}>
+      <section id="features" className="lp-section" style={{ background: '#f2f2f6', paddingBottom: 60 }}>
+        <div className="lp-section-inner">
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <h2 style={{ fontSize: 32, fontWeight: 900, color: '#272a3a' }}>
               <span style={{ background: 'linear-gradient(95deg,#ff7e5f,#b06ab3 60%,#6a7bf0)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>tone palette</span> ができること
@@ -160,11 +274,10 @@ export default function LandingPage() {
             <p style={{ marginTop: 12, fontSize: 15, color: '#7a7e90', fontWeight: 500 }}>4つの機能で、言葉選びの迷いをゼロにします。</p>
           </div>
 
-          {/* Bento grid: 12 cols */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12,1fr)', gap: 18 }}>
+          <div className="lp-bento">
 
             {/* 01 — large left */}
-            <div style={{ gridColumn: 'span 7', background: '#fff', borderRadius: 24, padding: '34px 36px', boxShadow: '0 12px 40px rgba(70,60,120,.08)' }}>
+            <div className="lp-b1" style={{ background: '#fff', borderRadius: 24, padding: '34px 36px', boxShadow: '0 12px 40px rgba(70,60,120,.08)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ fontSize: 26, fontWeight: 900, background: 'linear-gradient(95deg,#ff7e5f,#b06ab3)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', lineHeight: 1 }}>01</span>
                 <div>
@@ -172,7 +285,6 @@ export default function LandingPage() {
                   <p style={{ marginTop: 8, fontSize: 13, color: '#7a7e90', fontWeight: 500, lineHeight: 1.7 }}>画面を見ながら選ぶから、ニュアンスの微調整が思いのまま。どんな相手にも最適なトーンがすぐ見つかります。</p>
                 </div>
               </div>
-              {/* Large palette demo */}
               <div style={{ marginTop: 28, position: 'relative', padding: '40px 80px 48px' }}>
                 <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3 }}>フランク（親密）</span>
                 <span style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 72 }}>カジュアル<br />（くだけた）</span>
@@ -189,7 +301,7 @@ export default function LandingPage() {
             </div>
 
             {/* 02 — small right */}
-            <div style={{ gridColumn: 'span 5', background: '#fff', borderRadius: 24, padding: '34px 28px', boxShadow: '0 12px 40px rgba(70,60,120,.08)' }}>
+            <div className="lp-b2" style={{ background: '#fff', borderRadius: 24, padding: '34px 28px', boxShadow: '0 12px 40px rgba(70,60,120,.08)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ fontSize: 26, fontWeight: 900, background: 'linear-gradient(95deg,#ff7e5f,#b06ab3)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', lineHeight: 1 }}>02</span>
                 <div>
@@ -221,7 +333,7 @@ export default function LandingPage() {
             </div>
 
             {/* 03 — small left */}
-            <div style={{ gridColumn: 'span 5', background: '#fff', borderRadius: 24, padding: '34px 28px', boxShadow: '0 12px 40px rgba(70,60,120,.08)' }}>
+            <div className="lp-b3" style={{ background: '#fff', borderRadius: 24, padding: '34px 28px', boxShadow: '0 12px 40px rgba(70,60,120,.08)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span style={{ fontSize: 26, fontWeight: 900, background: 'linear-gradient(95deg,#ff7e5f,#b06ab3)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', lineHeight: 1 }}>03</span>
                 <div>
@@ -247,8 +359,7 @@ export default function LandingPage() {
             </div>
 
             {/* 04 — large right */}
-            <div style={{ gridColumn: 'span 7', background: 'linear-gradient(140deg,#1c1f2b 0%,#2a1f4a 100%)', borderRadius: 24, padding: '34px 36px', boxShadow: '0 12px 40px rgba(40,20,80,.2)', position: 'relative', overflow: 'hidden' }}>
-              {/* Decorative blob */}
+            <div className="lp-b4" style={{ background: 'linear-gradient(140deg,#1c1f2b 0%,#2a1f4a 100%)', borderRadius: 24, padding: '34px 36px', boxShadow: '0 12px 40px rgba(40,20,80,.2)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(176,106,179,.3) 0%,transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, position: 'relative' }}>
                 <span style={{ fontSize: 26, fontWeight: 900, background: 'linear-gradient(95deg,#ff7e5f,#b06ab3)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', lineHeight: 1 }}>04</span>
@@ -283,8 +394,8 @@ export default function LandingPage() {
       </section>
 
       {/* ===== HOW IT WORKS — white section ===== */}
-      <section id="how" style={{ background: '#fff', padding: '80px 0' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 28px' }}>
+      <section id="how" className="lp-section" style={{ background: '#fff' }}>
+        <div className="lp-section-inner">
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 999, background: 'linear-gradient(95deg,rgba(255,126,95,.12),rgba(176,106,179,.12))', border: '1px solid rgba(176,106,179,.2)', fontSize: 12.5, fontWeight: 700, color: '#8b5cf6', marginBottom: 16 }}>
               ✦ シンプルな3ステップ
@@ -293,9 +404,8 @@ export default function LandingPage() {
             <p style={{ marginTop: 12, fontSize: 15, color: '#7a7e90', fontWeight: 500 }}>3ステップで、最適な表現が手元に届きます。</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 0, position: 'relative' }}>
-            {/* Connecting line */}
-            <div style={{ position: 'absolute', top: 32, left: '16.7%', right: '16.7%', height: 2, background: 'linear-gradient(90deg,#ff7e5f,#b06ab3,#6a7bf0)', borderRadius: 1, zIndex: 0 }} />
+          <div className="lp-how-grid">
+            <div className="lp-how-line" />
 
             {[
               {
@@ -354,14 +464,14 @@ export default function LandingPage() {
       </section>
 
       {/* ===== SITUATIONS — lavender section ===== */}
-      <section id="usecase" style={{ background: 'linear-gradient(160deg,#f5f0ff 0%,#ede8fc 50%,#eef2ff 100%)', padding: '80px 0 60px' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+      <section id="usecase" className="lp-section" style={{ background: 'linear-gradient(160deg,#f5f0ff 0%,#ede8fc 50%,#eef2ff 100%)', paddingBottom: 60 }}>
+        <div className="lp-section-inner">
+          <div className="lp-sit-header">
             <div>
               <h2 style={{ fontSize: 30, fontWeight: 900, color: '#1c1f2b' }}>よく使う<span style={{ color: '#7b6ad0' }}>5つのシチュエーション</span>で即解決</h2>
               <p style={{ marginTop: 8, fontSize: 14, color: '#7a7e90', fontWeight: 500 }}>どのシーンでも、同じ簡単操作で最適な表現が見つかります。</p>
             </div>
-            <a href="#" style={{ fontSize: 13, fontWeight: 700, color: '#7b6ad0', textDecoration: 'none', whiteSpace: 'nowrap' }}>すべてのシチュエーションを見る →</a>
+            <a href="#" className="lp-sit-see-all">すべてのシチュエーションを見る →</a>
           </div>
 
           {/* Tab bar */}
@@ -385,7 +495,7 @@ export default function LandingPage() {
           </div>
 
           {/* Comparison */}
-          <div style={{ background: '#fff', borderRadius: 20, padding: 28, boxShadow: '0 8px 28px rgba(120,90,200,.1)', display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', gap: 26, alignItems: 'center' }}>
+          <div className="lp-sit-cmp">
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: '#2c2f40', marginBottom: 14 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7e5f" strokeWidth="1.8"><path d="M3 21v-2a4 4 0 0 1 4-4h4M14 7l5-4v6M19 3l-6 8 3 3"/><circle cx="9" cy="7" r="3"/></svg>
@@ -398,7 +508,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <div style={{ position: 'relative', padding: '24px 38px' }}>
+            <div className="lp-sit-palette" style={{ position: 'relative', padding: '24px 38px' }}>
               <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3 }}>フランク<br />（親密）</span>
               <span style={{ position: 'absolute', left: -6, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 46 }}>カジュアル<br />（くだけた）</span>
               <span style={{ position: 'absolute', right: -6, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 46 }}>フォーマル<br />（かしこまった）</span>
@@ -418,7 +528,7 @@ export default function LandingPage() {
               ))}
             </div>
             {/* Phone mockup */}
-            <div style={{ width: 150, height: 300, borderRadius: 26, background: '#1c1f2b', padding: 9, boxShadow: '0 18px 40px rgba(40,30,80,.22)' }}>
+            <div className="lp-sit-phone" style={{ width: 150, height: 300, borderRadius: 26, background: '#1c1f2b', padding: 9, boxShadow: '0 18px 40px rgba(40,30,80,.22)' }}>
               <div style={{ width: '100%', height: '100%', borderRadius: 19, background: '#f7f7fb', padding: '12px 10px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, color: '#6b6f82' }}>
                   <span>承諾する</span>
@@ -442,8 +552,8 @@ export default function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section id="pricing" style={{ background: '#f2f2f6', padding: '80px 0 60px' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '0 28px' }}>
+      <section id="pricing" className="lp-section" style={{ background: '#f2f2f6', paddingBottom: 60 }}>
+        <div className="lp-section-inner">
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <h2 style={{ fontSize: 32, fontWeight: 900, color: '#272a3a' }}>
               料金プラン <span style={{ fontSize: 16, fontWeight: 600, color: '#8a8ea0' }}>（今後の予定）</span>
@@ -451,7 +561,7 @@ export default function LandingPage() {
             <p style={{ marginTop: 12, fontSize: 15, color: '#7a7e90', fontWeight: 500 }}>まずは無料でアーリーアクセスに登録。リリース時に詳細をお知らせします。</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: 20, alignItems: 'start' }}>
+          <div className="lp-pricing-grid">
 
             {/* Free */}
             <div style={{ background: '#fff', borderRadius: 22, padding: '32px 28px', boxShadow: '0 8px 28px rgba(70,60,120,.07)' }}>
@@ -473,7 +583,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro — highlighted */}
-            <div style={{ borderRadius: 22, padding: 3, background: GRADIENT_BTN, boxShadow: '0 20px 60px rgba(150,90,200,.3)', position: 'relative', transform: 'scale(1.03)', zIndex: 1 }}>
+            <div className="lp-pro-card">
               <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: GRADIENT_BTN, padding: '6px 22px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(150,90,200,.4)' }}>
                 ✦ 人気No.1（予定）
               </div>
@@ -515,37 +625,39 @@ export default function LandingPage() {
       </section>
 
       {/* ===== CTA BANNER ===== */}
-      <section style={{ maxWidth: 1080, margin: '0 auto', padding: '60px 28px' }}>
-        <div style={{ borderRadius: 28, padding: '48px 52px', background: 'linear-gradient(105deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 68%,#6a82fb 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 40, boxShadow: '0 24px 60px rgba(150,90,200,.3)', position: 'relative', overflow: 'hidden' }}>
-          {/* Decorative orb */}
-          <div style={{ position: 'absolute', top: -60, right: 300, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,.08)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -40, right: 80, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.07)', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative' }}>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', lineHeight: 1.35 }}>言葉に迷わない毎日を、<br />あなたの手に。</h2>
-            <p style={{ marginTop: 10, fontSize: 14.5, color: 'rgba(255,255,255,.88)', fontWeight: 500 }}>今すぐ登録して、リリースの最新情報を受け取りましょう。</p>
-            <div style={{ marginTop: 18, display: 'flex', gap: 20, fontSize: 13, color: '#fff', fontWeight: 600 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✉ 無料で登録</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>⏱ リリース時にお知らせ</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✓ いつでも解除OK</span>
+      <section>
+        <div className="lp-cta-section">
+          <div className="lp-cta-inner">
+            {/* Decorative orbs */}
+            <div style={{ position: 'absolute', top: -60, right: 300, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,.08)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -40, right: 80, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.07)', pointerEvents: 'none' }} />
+            <div style={{ position: 'relative' }}>
+              <h2 className="lp-cta-h2">言葉に迷わない毎日を、<br />あなたの手に。</h2>
+              <p style={{ marginTop: 10, fontSize: 14.5, color: 'rgba(255,255,255,.88)', fontWeight: 500 }}>今すぐ登録して、リリースの最新情報を受け取りましょう。</p>
+              <div className="lp-cta-checks">
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✉ 無料で登録</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>⏱ リリース時にお知らせ</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✓ いつでも解除OK</span>
+              </div>
             </div>
+            <EarlyAccessForm
+              buttonLabel="アーリーアクセスに登録する →"
+              style={{ minWidth: 'min(380px, 100%)' }}
+            />
           </div>
-          <EarlyAccessForm
-            buttonLabel="アーリーアクセスに登録する →"
-            style={{ minWidth: 380 }}
-          />
         </div>
       </section>
 
       {/* ===== FOOTER ===== */}
       <footer style={{ borderTop: '1px solid rgba(20,20,40,.06)', background: '#f2f2f6' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto', padding: '32px 28px 48px', display: 'flex', alignItems: 'center', gap: 30 }}>
+        <div className="lp-footer-inner">
           <Logo size={17} />
-          <nav style={{ display: 'flex', gap: 26, fontSize: 13, fontWeight: 500, color: '#6b6f82' }}>
+          <nav className="lp-footer-nav">
             {['運営会社', 'プライバシーポリシー', '利用規約', 'お問い合わせ'].map(l => (
               <a key={l} href="#" style={{ color: 'inherit', textDecoration: 'none' }}>{l}</a>
             ))}
           </nav>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 14, color: '#8a8ea0' }}>
+          <div className="lp-footer-social">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 4c-.8.4-1.6.6-2.5.8A4.3 4.3 0 0 0 21.4 3a8.6 8.6 0 0 1-2.7 1A4.3 4.3 0 0 0 11.3 7.8 12.2 12.2 0 0 1 2.4 3.2 4.3 4.3 0 0 0 3.8 9 4.2 4.2 0 0 1 1.9 8.5v.05A4.3 4.3 0 0 0 5.3 12.8a4.3 4.3 0 0 1-1.9.07 4.3 4.3 0 0 0 4 3 8.6 8.6 0 0 1-5.3 1.8A12.1 12.1 0 0 0 8.3 20.6c7.9 0 12.2-6.5 12.2-12.2v-.55A8.7 8.7 0 0 0 22 4z"/></svg>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.5-.95 1.8-1.95 3.65-1.95 3.9 0 4.6 2.55 4.6 5.85V21h-4v-5.5c0-1.3 0-3-1.85-3s-2.15 1.45-2.15 2.9V21H9z"/></svg>
           </div>
