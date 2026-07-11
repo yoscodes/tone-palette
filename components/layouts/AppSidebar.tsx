@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/use-user";
+import { signInWithGoogle } from "@/app/(auth)/actions";
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
@@ -18,6 +19,9 @@ const PLAN_LIMITS: Record<string, number> = {
 
 const GRADIENT = "linear-gradient(95deg,#ff7e5f 0%,#b06ab3 55%,#6a7bf0 100%)";
 
+const GUEST_COUNT_KEY = "tp_guest_count";
+const GUEST_LIMIT     = 3;
+
 const Logo = () => (
   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
     <div style={{ position: "relative", width: 26, height: 22, flexShrink: 0 }}>
@@ -27,6 +31,15 @@ const Logo = () => (
     </div>
     <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: "-0.01em", color: "#1c1f2b" }}>tone palette</span>
   </div>
+);
+
+const GoogleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
 );
 
 interface Profile {
@@ -42,10 +55,12 @@ export function AppSidebar({
   sidebarClassName?: string;
   onClose?: () => void;
 }) {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [guestCount, setGuestCount] = useState(0);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!user) return;
@@ -58,17 +73,28 @@ export function AppSidebar({
       .then(({ data }) => { if (data) setProfile(data); });
   }, [user]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || user) return;
+    const count = parseInt(localStorage.getItem(GUEST_COUNT_KEY) ?? "0", 10);
+    setGuestCount(count);
+  }, [user]);
+
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
   }
 
-  const plan  = profile?.plan ?? "free";
-  const limit = PLAN_LIMITS[plan];
-  const used  = profile?.generation_count ?? 0;
-  const pct   = limit === Infinity ? 0 : Math.min(100, (used / limit) * 100);
-  const remaining = limit === Infinity ? "∞" : Math.max(0, limit - used);
+  const isGuest = !userLoading && !user;
+
+  const plan      = profile?.plan ?? "free";
+  const limit     = PLAN_LIMITS[plan] ?? 10;
+  const used      = profile?.generation_count ?? 0;
+  const pct       = Math.min(100, (used / limit) * 100);
+  const remaining = Math.max(0, limit - used);
+
+  const guestLeft = Math.max(0, GUEST_LIMIT - guestCount);
+  const guestPct  = Math.min(100, (guestCount / GUEST_LIMIT) * 100);
 
   const navItems = [
     {
@@ -79,6 +105,7 @@ export function AppSidebar({
           <path d="M12 5v14M5 12h14" />
         </svg>
       ),
+      guestAllowed: true,
     },
     {
       href: "/history",
@@ -88,6 +115,7 @@ export function AppSidebar({
           <path d="M3 12a9 9 0 1 0 9-9M3 4v4h4" />
         </svg>
       ),
+      guestAllowed: false,
     },
     {
       href: "/settings",
@@ -98,6 +126,7 @@ export function AppSidebar({
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       ),
+      guestAllowed: false,
     },
   ];
 
@@ -146,7 +175,8 @@ export function AppSidebar({
           メニュー
         </p>
         {navItems.map(item => {
-          const active = pathname === item.href;
+          const active  = pathname === item.href;
+          const dimmed  = isGuest && !item.guestAllowed;
           return (
             <Link
               key={item.href}
@@ -159,15 +189,21 @@ export function AppSidebar({
                 borderRadius: 10,
                 fontSize: 13.5,
                 fontWeight: active ? 700 : 500,
-                color: active ? "#7b6ad0" : "#4a4d60",
+                color: dimmed ? "#c5c8d8" : active ? "#7b6ad0" : "#4a4d60",
                 background: active ? "rgba(123,106,208,.09)" : "transparent",
                 textDecoration: "none",
                 transition: "background .15s, color .15s",
                 marginBottom: 2,
+                pointerEvents: dimmed ? "none" : "auto",
               }}
             >
-              <span style={{ color: active ? "#7b6ad0" : "#8a8ea0" }}>{item.icon}</span>
+              <span style={{ color: dimmed ? "#d4c9f0" : active ? "#7b6ad0" : "#8a8ea0" }}>{item.icon}</span>
               {item.label}
+              {dimmed && (
+                <span style={{ fontSize: 9, fontWeight: 700, color: "#b0b3c5", background: "#f0f0f6", padding: "2px 6px", borderRadius: 999, marginLeft: "auto" }}>
+                  要登録
+                </span>
+              )}
             </Link>
           );
         })}
@@ -175,69 +211,104 @@ export function AppSidebar({
 
       {/* 利用状況 */}
       <div style={{ padding: "12px 16px 8px", borderTop: "1px solid rgba(20,20,40,.06)" }}>
-        {/* プランバッジ */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: "#6b6f82" }}>今月の利用状況</span>
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#7b6ad0", background: "rgba(123,106,208,.1)", padding: "2px 8px", borderRadius: 999 }}>
-            {PLAN_LABELS[plan]}
-          </span>
-        </div>
 
-        {/* プログレスバー */}
-        <div style={{ background: "#f0f0f6", borderRadius: 999, height: 6, marginBottom: 6, overflow: "hidden" }}>
-          <div style={{
-            height: "100%",
-            width: `${pct}%`,
-            borderRadius: 999,
-            background: pct > 80 ? "#f97316" : GRADIENT,
-            transition: "width .4s",
-          }} />
-        </div>
-        <p style={{ fontSize: 11, color: "#9295a8", fontWeight: 500, marginBottom: 12 }}>
-          {limit === Infinity ? "無制限" : `残り ${remaining} 回`}
-        </p>
-
-        {/* アップグレードボタン（Freeプランのみ）*/}
-        {plan === "free" && (
-          <Link
-            href="/settings#billing"
-            style={{
-              display: "block", width: "100%", border: "none", cursor: "pointer",
-              fontFamily: "inherit", textAlign: "center",
-              fontSize: 12.5, fontWeight: 700, color: "#fff", padding: "10px",
-              borderRadius: 10, background: GRADIENT, marginBottom: 10,
-              textDecoration: "none",
-            }}
-          >
-            ✦ アップグレード
-          </Link>
-        )}
-
-        {/* ユーザー情報 & ログアウト */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-            background: GRADIENT, display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 700, color: "#fff",
-          }}>
-            {user?.email?.[0]?.toUpperCase() ?? "?"}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "#3a3d50", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {user?.email ?? ""}
+        {isGuest ? (
+          /* ゲストモード表示 */
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#6b6f82" }}>ゲスト利用</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#b06ab3", background: "rgba(176,106,179,.1)", padding: "2px 8px", borderRadius: 999 }}>
+                ゲスト
+              </span>
+            </div>
+            <div style={{ background: "#f0f0f6", borderRadius: 999, height: 6, marginBottom: 6, overflow: "hidden" }}>
+              <div style={{
+                height: "100%", width: `${guestPct}%`, borderRadius: 999,
+                background: guestPct >= 100 ? "#f97316" : GRADIENT,
+                transition: "width .4s",
+              }} />
+            </div>
+            <p style={{ fontSize: 11, color: "#9295a8", fontWeight: 500, marginBottom: 12 }}>
+              あと {guestLeft} 回 / {GUEST_LIMIT} 回
             </p>
-          </div>
-        </div>
-        <button
-          onClick={handleSignOut}
-          style={{
-            width: "100%", border: "1px solid #e4e6f0", cursor: "pointer", fontFamily: "inherit",
-            fontSize: 12, fontWeight: 600, color: "#6b6f82", padding: "8px",
-            borderRadius: 8, background: "#fff", marginTop: 6, marginBottom: 8,
-          }}
-        >
-          ログアウト
-        </button>
+            <form action={() => startTransition(async () => { await signInWithGoogle(); })}>
+              <button
+                type="submit"
+                disabled={pending}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  width: "100%", border: "none", cursor: pending ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                  fontSize: 12.5, fontWeight: 700, color: "#fff", padding: "10px",
+                  borderRadius: 10, background: pending ? "#c5c8d8" : GRADIENT, marginBottom: 10,
+                }}
+              >
+                <GoogleIcon />
+                {pending ? "リダイレクト中…" : "Googleで無料登録"}
+              </button>
+            </form>
+          </>
+        ) : (
+          /* ログイン済み表示 */
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#6b6f82" }}>今月の利用状況</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#7b6ad0", background: "rgba(123,106,208,.1)", padding: "2px 8px", borderRadius: 999 }}>
+                {PLAN_LABELS[plan] ?? "Free"}
+              </span>
+            </div>
+            <div style={{ background: "#f0f0f6", borderRadius: 999, height: 6, marginBottom: 6, overflow: "hidden" }}>
+              <div style={{
+                height: "100%", width: `${pct}%`, borderRadius: 999,
+                background: pct > 80 ? "#f97316" : GRADIENT,
+                transition: "width .4s",
+              }} />
+            </div>
+            <p style={{ fontSize: 11, color: "#9295a8", fontWeight: 500, marginBottom: 12 }}>
+              残り {remaining} 回
+            </p>
+
+            {plan === "free" && (
+              <Link
+                href="/settings#billing"
+                style={{
+                  display: "block", width: "100%", border: "none", cursor: "pointer",
+                  fontFamily: "inherit", textAlign: "center",
+                  fontSize: 12.5, fontWeight: 700, color: "#fff", padding: "10px",
+                  borderRadius: 10, background: GRADIENT, marginBottom: 10,
+                  textDecoration: "none",
+                }}
+              >
+                ✦ アップグレード
+              </Link>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                background: GRADIENT, display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 700, color: "#fff",
+              }}>
+                {user?.email?.[0]?.toUpperCase() ?? "?"}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "#3a3d50", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user?.email ?? ""}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              style={{
+                width: "100%", border: "1px solid #e4e6f0", cursor: "pointer", fontFamily: "inherit",
+                fontSize: 12, fontWeight: 600, color: "#6b6f82", padding: "8px",
+                borderRadius: 8, background: "#fff", marginTop: 6, marginBottom: 8,
+              }}
+            >
+              ログアウト
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );

@@ -214,3 +214,53 @@ create policy "public early access insert"
   on public.early_access_leads for insert
   to anon, authenticated
   with check (true);
+
+-- ── 8. guest_generations（ゲストモード用）─────────────────────
+-- service role のみアクセス。RLSは有効だがポリシーなし＝anon不可
+create table if not exists public.guest_generations (
+  id          uuid        primary key default gen_random_uuid(),
+  guest_id    text        not null,
+  input_text  text        not null,
+  formality   float       not null check (formality between 0 and 1),
+  intimacy    float       not null check (intimacy between 0 and 1),
+  situation   text,
+  output_text text        not null,
+  tone_label  text,
+  created_at  timestamptz not null default now()
+);
+
+alter table public.guest_generations enable row level security;
+
+create index if not exists idx_guest_generations_guest_id
+  on public.guest_generations (guest_id);
+
+-- ゲスト履歴を本登録ユーザーに移行する関数
+create or replace function public.migrate_guest_to_user(
+  p_guest_id text,
+  p_user_id  uuid
+)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_result json;
+begin
+  with inserted as (
+    insert into public.palette_generations
+      (user_id, input_text, formality, intimacy, situation, output_text, tone_label, created_at)
+    select
+      p_user_id, input_text, formality, intimacy, situation, output_text, tone_label, created_at
+    from public.guest_generations
+    where guest_id = p_guest_id
+    order by created_at
+    returning id, input_text, output_text, tone_label, formality
+  )
+  select json_agg(row_to_json(inserted)) into v_result from inserted;
+
+  delete from public.guest_generations where guest_id = p_guest_id;
+
+  return coalesce(v_result, '[]'::json);
+end;
+$$;

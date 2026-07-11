@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
-// ③ システムプロンプトを分離（インジェクション対策）
 const SYSTEM_PROMPT = `あなたはビジネス文章のトーン変換の専門家です。
 ユーザーが送る入力文を、指定されたフォーマリティ・親密さのトーンで日本語ビジネス文章として書き換えてください。
 
@@ -12,14 +12,9 @@ const SYSTEM_PROMPT = `あなたはビジネス文章のトーン変換の専門
 
 余計な説明文・コードブロック・空行は一切出力しないでください。`;
 
-export async function POST(req: NextRequest) {
-  // ── 認証チェック ──────────────────────────────────────────
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return Response.json({ error: "ログインが必要です" }, { status: 401 });
-  }
+const GUEST_LIMIT = 3;
 
+export async function POST(req: NextRequest) {
   // ── リクエストパース ──────────────────────────────────────
   let body: { text?: string; formality?: number; intimacy?: number; situation?: string };
   try {
@@ -36,7 +31,35 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "テキストは500文字以内で入力してください" }, { status: 400 });
   }
 
-  // ── 生成消費（原子的チェック＋インクリメント）────────────
+  // ── 認証チェック ──────────────────────────────────────────
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // ── ゲストモード ──────────────────────────────────────────
+  const guestId = req.headers.get("x-guest-id");
+
+  if (!user) {
+    if (!guestId || guestId.trim().length < 8) {
+      return Response.json({ error: "ログインが必要です" }, { status: 401 });
+    }
+
+    // ゲストの生成回数チェック（service role でRLSバイパス）
+    const { count } = await supabaseAdmin
+      .from("guest_generations")
+      .select("id", { count: "exact", head: true })
+      .eq("guest_id", guestId);
+
+    if ((count ?? 0) >= GUEST_LIMIT) {
+      return Response.json(
+        { error: "ゲスト利用の上限に達しました", code: "guest_limit" },
+        { status: 429 }
+      );
+    }
+
+    return streamGenerate({ text, formality, intimacy, situation, guestId });
+  }
+
+  // ── 認証済みユーザー：クォータ消費 ───────────────────────
   const currentMonth = new Date().toISOString().slice(0, 7);
   const { data: consume, error: consumeError } = await supabase
     .rpc("try_consume_generation", { p_user_id: user.id, p_month: currentMonth });
@@ -54,17 +77,26 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "プロファイルが見つかりません" }, { status: 404 });
   }
 
-  // ── プロンプト構築 ──────────────────────────────────────
+  return streamGenerate({ text, formality, intimacy, situation, user, supabase, consume });
+}
+
+// ── 共通ストリーミング生成 ──────────────────────────────────
+type GenerateOptions =
+  | { text: string; formality: number; intimacy: number; situation?: string; guestId: string }
+  | { text: string; formality: number; intimacy: number; situation?: string; user: { id: string }; supabase: Awaited<ReturnType<typeof createClient>>; consume: { remaining: number } };
+
+function streamGenerate(opts: GenerateOptions) {
+  const { text, formality, intimacy, situation } = opts;
+  const isGuest = "guestId" in opts;
+
   const formalityLabel = formality < 0.33 ? "カジュアル（くだけた）" : formality < 0.67 ? "標準的（丁寧）" : "フォーマル（かしこまった）";
   const intimacyLabel  = intimacy  < 0.33 ? "丁寧（距離感あり）"    : intimacy  < 0.67 ? "標準的"         : "フランク（親密）";
   const situationText  = situation ? `\nシチュエーション: ${situation}` : "";
 
-  // ③ ユーザー入力はユーザーターンに分離
   const userMessage = `入力文: ${text.trim()}
 フォーマリティ: ${formalityLabel}
 親密さ: ${intimacyLabel}${situationText}`;
 
-  // ② ストリーミングレスポンス ──────────────────────────────
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const encoder   = new TextEncoder();
 
@@ -92,7 +124,6 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // ① 出力テキストとメタデータ行を分離
         const newlineIdx = fullText.indexOf("\n");
         const outputText = (newlineIdx !== -1 ? fullText.slice(0, newlineIdx) : fullText).trim();
         const metaLine   = newlineIdx !== -1 ? fullText.slice(newlineIdx + 1).trim() : "";
@@ -101,7 +132,6 @@ export async function POST(req: NextRequest) {
         let reason    = "";
         if (metaLine) {
           try {
-            // ① ```json ブロックのクリーニング
             const cleaned = metaLine.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
             const meta    = JSON.parse(cleaned);
             toneLabel = meta.tone_label ?? toneLabel;
@@ -109,30 +139,52 @@ export async function POST(req: NextRequest) {
           } catch {}
         }
 
-        // DB保存
-        const { data: inserted } = await supabase
-          .from("palette_generations")
-          .insert({
-            user_id:     user.id,
-            input_text:  text.trim(),
-            formality,
-            intimacy,
-            situation:   situation ?? null,
-            output_text: outputText,
-            tone_label:  toneLabel,
-          })
-          .select("id")
-          .single();
+        // DB 保存
+        let insertedId = crypto.randomUUID();
+        let remaining: number | null = null;
 
-        // 完了イベント（④ reason を含む）
+        if (isGuest) {
+          const { data: ins } = await supabaseAdmin
+            .from("guest_generations")
+            .insert({
+              guest_id:    opts.guestId,
+              input_text:  text.trim(),
+              formality,
+              intimacy,
+              situation:   situation ?? null,
+              output_text: outputText,
+              tone_label:  toneLabel,
+            })
+            .select("id")
+            .single();
+          if (ins?.id) insertedId = ins.id;
+        } else {
+          const { supabase, user, consume } = opts as Extract<GenerateOptions, { user: unknown }>;
+          const { data: ins } = await supabase
+            .from("palette_generations")
+            .insert({
+              user_id:     user.id,
+              input_text:  text.trim(),
+              formality,
+              intimacy,
+              situation:   situation ?? null,
+              output_text: outputText,
+              tone_label:  toneLabel,
+            })
+            .select("id")
+            .single();
+          if (ins?.id) insertedId = ins.id;
+          remaining = consume.remaining;
+        }
+
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({
             done: true,
             toneLabel,
             reason,
-            remaining: consume.remaining,
+            remaining,
             historyItem: {
-              id:          inserted?.id ?? crypto.randomUUID(),
+              id:          insertedId,
               input_text:  text.trim(),
               output_text: outputText,
               tone_label:  toneLabel,
@@ -142,7 +194,10 @@ export async function POST(req: NextRequest) {
         );
       } catch (err) {
         console.error("Stream error:", err);
-        await supabase.rpc("refund_generation", { p_user_id: user.id });
+        if (!isGuest) {
+          const { supabase, user } = opts as Extract<GenerateOptions, { user: unknown }>;
+          await supabase.rpc("refund_generation", { p_user_id: user.id });
+        }
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ error: "AI生成中にエラーが発生しました" })}\n\n`)
         );
