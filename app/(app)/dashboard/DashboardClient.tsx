@@ -13,6 +13,14 @@ const GRADIENT     = "linear-gradient(135deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 66%,
 const GRADIENT_BTN = "linear-gradient(95deg,#ff7e5f 0%,#b06ab3 55%,#6a7bf0 100%)";
 const SITUATIONS   = ["承諾する", "謝罪する", "依頼する", "日程調整する", "お断りする"];
 
+const SITUATION_PLACEHOLDER: Record<string, string> = {
+  "承諾する":    "例：了解です。",
+  "謝罪する":    "例：すみません、遅くなりました。",
+  "依頼する":    "例：これをやっておいてもらえますか？",
+  "日程調整する": "例：来週の月曜はどうですか？",
+  "お断りする":  "例：ちょっと難しいです。",
+};
+
 const GUEST_ID_KEY    = "tp_guest_id";
 const GUEST_HIST_KEY  = "tp_guest_history";
 const GUEST_COUNT_KEY = "tp_guest_count";
@@ -592,22 +600,33 @@ export default function DashboardClient({
       gap: 6px;
       max-height: 150px;
     }
+    .tp-sit-tabs {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .tp-sit-tabs::-webkit-scrollbar { display: none; }
     .tp-btn-generate {
       transition: transform .15s ease, box-shadow .15s ease, background .2s;
     }
     .tp-btn-generate:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(176,106,179,.5) !important;
+      box-shadow: 0 12px 32px rgba(150,90,200,.58) !important;
     }
     .tp-btn-generate:active:not(:disabled) {
       transform: translateY(0);
     }
     @media (max-width: 900px) {
-      .tp-outer { overflow-y: auto; height: auto; min-height: 100%; padding: 16px; }
-      .tp-grid { flex-direction: column; gap: 16px; }
-      .tp-card { height: auto; overflow: visible; padding: 20px; }
+      .tp-outer {
+        overflow-y: auto; height: auto; min-height: 100%;
+        padding: 12px 20px;
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+      }
+      .tp-grid { flex-direction: column; gap: 14px; }
+      .tp-card { height: auto; overflow: visible; padding: 18px 16px; }
       .tp-palette-wrap { height: 280px; flex: none; }
       .tp-output-body { min-height: 220px; }
+      .tp-sit-tabs { overflow-x: auto; flex-wrap: nowrap; }
+      .tp-btn-generate:not(:disabled) { font-size: 16px; padding: 17px 20px; }
     }
   `;
 
@@ -644,7 +663,7 @@ export default function DashboardClient({
         <div className="tp-card tp-left">
 
           {/* シチュエーションタブ */}
-          <div style={{ flexShrink: 0, display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div className="tp-sit-tabs" style={{ flexShrink: 0, display: "flex", gap: 6, flexWrap: "wrap" }}>
             {SITUATIONS.map(s => (
               <button
                 key={s}
@@ -667,7 +686,7 @@ export default function DashboardClient({
               rows={3}
               value={inputText}
               onChange={e => setInputText(e.target.value)}
-              placeholder="例：了解です。"
+              placeholder={SITUATION_PLACEHOLDER[situation] ?? "例：了解です。"}
               maxLength={500}
               style={{
                 display: "block", width: "100%", boxSizing: "border-box",
@@ -740,7 +759,7 @@ export default function DashboardClient({
               fontFamily: "inherit", fontSize: 15, fontWeight: 800, color: "#fff",
               padding: "15px 20px", borderRadius: 14,
               background: GRADIENT_BTN,
-              boxShadow: canGenerate ? "0 6px 22px rgba(176,106,179,.38)" : "none",
+              boxShadow: canGenerate ? "0 8px 28px rgba(150,90,200,.48)" : "none",
               opacity: canGenerate ? 1 : 0.48,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}

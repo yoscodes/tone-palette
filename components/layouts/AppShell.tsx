@@ -9,6 +9,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#f3f4f9" }}>
       <style>{`
+        .app-sidebar-close {
+          display: none;
+        }
         .app-topbar {
           display: none;
         }
@@ -16,6 +19,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           display: none;
         }
         @media (max-width: 768px) {
+          .app-sidebar-close {
+            display: flex;
+          }
           .app-topbar {
             display: flex;
             align-items: center;

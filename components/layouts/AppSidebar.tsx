@@ -154,9 +154,10 @@ export function AppSidebar({
         {onClose && (
           <button
             onClick={onClose}
+            className="app-sidebar-close"
             style={{
               border: "none", background: "none", cursor: "pointer",
-              padding: "4px", color: "#a3a6b8", display: "flex",
+              padding: "4px", color: "#a3a6b8",
               alignItems: "center", justifyContent: "center",
             }}
             aria-label="閉じる"
@@ -210,7 +211,7 @@ export function AppSidebar({
       </nav>
 
       {/* 利用状況 */}
-      <div style={{ padding: "12px 16px 8px", borderTop: "1px solid rgba(20,20,40,.06)" }}>
+      <div style={{ paddingTop: 12, paddingLeft: 16, paddingRight: 16, paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))", borderTop: "1px solid rgba(20,20,40,.06)" }}>
 
         {isGuest ? (
           /* ゲストモード表示 */
