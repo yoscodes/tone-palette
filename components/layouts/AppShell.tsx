@@ -7,7 +7,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#f2f2f6" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#f3f4f9" }}>
       <style>{`
         .app-topbar {
           display: none;
@@ -87,7 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {children}
         </div>
       </main>

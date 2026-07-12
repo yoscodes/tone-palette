@@ -4,7 +4,7 @@ import DashboardClient, { type HistoryItem, type Preset } from "./DashboardClien
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>;
+  searchParams: Promise<{ checkout?: string; f?: string; i?: string; s?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -38,13 +38,19 @@ export default async function DashboardPage({
     initialPresets = presetsData ?? [];
   }
 
-  const { checkout } = await searchParams;
+  const { checkout, f, i, s } = await searchParams;
+
+  const initialFormality = f ? parseFloat(f) : undefined;
+  const initialIntimacy  = i ? parseFloat(i) : undefined;
 
   return (
     <DashboardClient
       initialHistory={initialHistory}
       initialPresets={initialPresets}
       checkoutSuccess={checkout === "success"}
+      initialFormality={!isNaN(initialFormality ?? NaN) ? initialFormality : undefined}
+      initialIntimacy={!isNaN(initialIntimacy ?? NaN) ? initialIntimacy : undefined}
+      initialSituation={s || undefined}
     />
   );
 }

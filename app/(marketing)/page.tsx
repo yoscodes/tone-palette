@@ -1,5 +1,13 @@
 import { HeroDemoCard } from '@/components/marketing/HeroDemoCard'
-import { EarlyAccessForm } from '@/components/marketing/EarlyAccessForm'
+
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+)
 
 const Logo = ({ size = 19 }: { size?: number }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -32,11 +40,41 @@ const BlueCheck = () => (
   </svg>
 )
 
-const PaletteMini = ({ size = 140 }: { size?: number }) => (
-  <div style={{ position: 'relative', width: size, height: size, borderRadius: 14, background: 'linear-gradient(135deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 66%,#6a82fb 100%)' }}>
-    <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: 'rgba(255,255,255,.55)' }} />
-    <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1.5, background: 'rgba(255,255,255,.55)' }} />
-    <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,.92)', boxShadow: '0 3px 9px rgba(0,0,0,.22)' }} />
+const PALETTE_QUADRANTS = [
+  { main: '親密', sub: 'フランク',     pos: { top: '25%', left: '25%' } },
+  { main: '丁寧', sub: '標準的',       pos: { top: '25%', left: '75%' } },
+  { main: '事務的', sub: '簡潔',       pos: { top: '75%', left: '25%' } },
+  { main: '厳格', sub: 'かしこまった', pos: { top: '75%', left: '75%' } },
+]
+
+const CursorDot = ({ size = 28 }: { size?: number }) => (
+  <div style={{ width: size, height: size, borderRadius: '50%', background: 'rgba(255,255,255,.96)', boxShadow: '0 6px 20px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.18), 0 0 0 2px rgba(255,255,255,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <svg width={Math.round(size * 0.43)} height={Math.round(size * 0.43)} viewBox="0 0 24 24" fill="none" stroke="#9a78c8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="5,9 2,12 5,15"/><polyline points="9,5 12,2 15,5"/>
+      <polyline points="15,19 12,22 9,19"/><polyline points="19,9 22,12 19,15"/>
+      <line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>
+    </svg>
+  </div>
+)
+
+const PaletteMini = ({ size = 140, cursorX = 50, cursorY = 50 }: { size?: number; cursorX?: number; cursorY?: number }) => (
+  <div style={{ position: 'relative', width: size, height: size, borderRadius: 14, background: GRADIENT_PALETTE, overflow: 'hidden' }}>
+    {/* Groove lines */}
+    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 1px)', width: 3, background: 'rgba(0,0,0,.12)' }} />
+    <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 1px)', height: 3, background: 'rgba(0,0,0,.12)' }} />
+    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 0.5px)', width: 1, background: 'rgba(255,255,255,.45)' }} />
+    <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 0.5px)', height: 1, background: 'rgba(255,255,255,.45)' }} />
+    {/* Quadrant labels */}
+    {PALETTE_QUADRANTS.map(q => (
+      <div key={q.main} style={{ position: 'absolute', top: q.pos.top, left: q.pos.left, transform: 'translate(-50%,-50%)', textAlign: 'center', pointerEvents: 'none', opacity: 0.45 }}>
+        <div style={{ fontSize: size * 0.075, fontWeight: 800, color: '#fff', lineHeight: 1, textShadow: '0 1px 4px rgba(0,0,0,.3)' }}>{q.main}</div>
+        <div style={{ fontSize: size * 0.055, fontWeight: 600, color: '#fff', marginTop: 2, textShadow: '0 1px 3px rgba(0,0,0,.25)' }}>{q.sub}</div>
+      </div>
+    ))}
+    {/* Cursor */}
+    <div style={{ position: 'absolute', left: `${cursorX}%`, top: `${cursorY}%`, transform: 'translate(-50%,-50%)', zIndex: 1 }}>
+      <CursorDot size={Math.round(size * 0.2)} />
+    </div>
   </div>
 )
 
@@ -74,12 +112,13 @@ export default function LandingPage() {
           .lp-hero-h1 { font-size: 36px; margin-top: 16px; }
         }
         @media (max-width: 640px) {
-          .lp-hero-grid { padding: 36px 20px 48px; }
+          .lp-hero-grid { padding: 36px 20px 48px; gap: 32px; }
+          .lp-hero-demo { display: block; }
           .lp-hero-h1 { font-size: 30px; }
         }
         @media (max-width: 480px) {
           .lp-hero-grid { padding: 28px 16px 40px; }
-          .lp-hero-h1 { font-size: 26px; }
+          .lp-hero-h1 { font-size: 28px; }
         }
 
         /* ── PAIN GRID ── */
@@ -188,8 +227,8 @@ export default function LandingPage() {
           </nav>
           <div className="lp-header-right">
             <a href="/login" className="lp-login">ログイン</a>
-            <a href="/signup" className="lp-signup">
-              アーリーアクセスに登録する
+            <a href="/login" className="lp-signup">
+              無料で始める
             </a>
           </div>
         </div>
@@ -214,9 +253,17 @@ export default function LandingPage() {
             <p style={{ marginTop: 20, fontSize: 15.5, lineHeight: 1.9, color: '#55596b', fontWeight: 500 }}>
               相手との距離感を選ぶだけ。<br />チャットもメールも、もう送信ボタンの前で悩みません。
             </p>
-            <EarlyAccessForm style={{ marginTop: 28, maxWidth: 440 }} />
-            <div style={{ marginTop: 18, display: 'flex', gap: 20, fontSize: 12.5, color: '#6a6e80', fontWeight: 500, flexWrap: 'wrap' }}>
-              {['無料で登録', 'リリース時にメールでお知らせ', 'いつでも解除OK'].map(t => (
+            <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 400 }}>
+              <a href="/login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '16px 28px', borderRadius: 999, background: GRADIENT_BTN, color: '#fff', textDecoration: 'none', fontSize: 15, fontWeight: 800, boxShadow: '0 8px 28px rgba(150,90,200,.32)', whiteSpace: 'nowrap' }}>
+                <GoogleIcon />
+                Googleで無料登録する
+              </a>
+              <a href="/dashboard" style={{ textAlign: 'center', fontSize: 13.5, fontWeight: 600, color: '#7b6ad0', textDecoration: 'none', padding: '6px' }}>
+                まずはゲストで試す（3回まで無料）→
+              </a>
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', gap: 20, fontSize: 12.5, color: '#6a6e80', fontWeight: 500, flexWrap: 'wrap' }}>
+              {['クレジットカード不要', 'すぐに利用開始', 'いつでも解除OK'].map(t => (
                 <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><GreenCheck />{t}</span>
               ))}
             </div>
@@ -285,16 +332,23 @@ export default function LandingPage() {
                   <p style={{ marginTop: 8, fontSize: 13, color: '#7a7e90', fontWeight: 500, lineHeight: 1.7 }}>画面を見ながら選ぶから、ニュアンスの微調整が思いのまま。どんな相手にも最適なトーンがすぐ見つかります。</p>
                 </div>
               </div>
-              <div style={{ marginTop: 28, position: 'relative', padding: '40px 80px 48px' }}>
-                <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3 }}>フランク（親密）</span>
-                <span style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 72 }}>カジュアル<br />（くだけた）</span>
-                <span style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontSize: 11, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 72 }}>フォーマル<br />（かしこまった）</span>
-                <span style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', fontSize: 11, fontWeight: 700, color: '#7a7e90' }}>丁寧（標準的）</span>
-                <div style={{ width: '100%', aspectRatio: '2/1', borderRadius: 18, background: GRADIENT_PALETTE, position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: 'rgba(255,255,255,.55)' }} />
-                  <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1.5, background: 'rgba(255,255,255,.55)' }} />
-                  <div style={{ position: 'absolute', left: '66%', top: '40%', transform: 'translate(-50%,-50%)', width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,.94)', boxShadow: '0 4px 12px rgba(0,0,0,.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a78c8" strokeWidth="2"><path d="M7 7l-3 3 3 3M17 7l3 3-3 3M7 7h10"/></svg>
+              <div style={{ marginTop: 28, position: 'relative', padding: '8px 0' }}>
+                <div style={{ width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '1/1', borderRadius: 18, background: GRADIENT_PALETTE, position: 'relative', overflow: 'hidden' }}>
+                  {/* Groove lines */}
+                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 1px)', width: 3, background: 'rgba(0,0,0,.12)' }} />
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 1px)', height: 3, background: 'rgba(0,0,0,.12)' }} />
+                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 0.5px)', width: 1, background: 'rgba(255,255,255,.45)' }} />
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 0.5px)', height: 1, background: 'rgba(255,255,255,.45)' }} />
+                  {/* Quadrant labels */}
+                  {PALETTE_QUADRANTS.map(q => (
+                    <div key={q.main} style={{ position: 'absolute', top: q.pos.top, left: q.pos.left, transform: 'translate(-50%,-50%)', textAlign: 'center', pointerEvents: 'none', opacity: 0.45 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', lineHeight: 1, textShadow: '0 1px 4px rgba(0,0,0,.3)' }}>{q.main}</div>
+                      <div style={{ fontSize: 10, fontWeight: 600, color: '#fff', marginTop: 2, textShadow: '0 1px 3px rgba(0,0,0,.25)' }}>{q.sub}</div>
+                    </div>
+                  ))}
+                  {/* Cursor at 丁寧/標準的 (top-right) */}
+                  <div style={{ position: 'absolute', left: '66%', top: '40%', transform: 'translate(-50%,-50%)', zIndex: 1 }}>
+                    <CursorDot size={30} />
                   </div>
                 </div>
               </div>
@@ -425,11 +479,7 @@ export default function LandingPage() {
                 desc: 'パレットをドラッグして、相手との距離感を直感的にセット。',
                 visual: (
                   <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ position: 'relative', width: 120, height: 120, borderRadius: 14, background: GRADIENT_PALETTE }}>
-                      <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: 'rgba(255,255,255,.55)' }} />
-                      <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1.5, background: 'rgba(255,255,255,.55)' }} />
-                      <div style={{ position: 'absolute', left: '66%', top: '40%', transform: 'translate(-50%,-50%)', width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,255,255,.94)', boxShadow: '0 4px 12px rgba(0,0,0,.2)' }} />
-                    </div>
+                    <PaletteMini size={130} cursorX={66} cursorY={40} />
                   </div>
                 ),
               },
@@ -508,12 +558,8 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <div className="lp-sit-palette" style={{ position: 'relative', padding: '24px 38px' }}>
-              <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3 }}>フランク<br />（親密）</span>
-              <span style={{ position: 'absolute', left: -6, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 46 }}>カジュアル<br />（くだけた）</span>
-              <span style={{ position: 'absolute', right: -6, top: '50%', transform: 'translateY(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3, width: 46 }}>フォーマル<br />（かしこまった）</span>
-              <span style={{ position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)', fontSize: 10, fontWeight: 700, color: '#7a7e90', textAlign: 'center', lineHeight: 1.3 }}>丁寧<br />（標準的）</span>
-              <PaletteMini size={140} />
+            <div className="lp-sit-palette" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PaletteMini size={140} cursorX={66} cursorY={40} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: '#2c2f40', marginBottom: 14 }}>
@@ -534,10 +580,13 @@ export default function LandingPage() {
                   <span>承諾する</span>
                   <div style={{ display: 'flex', gap: 5, color: '#a3a6b8' }}><span>⌘</span><span>↻</span></div>
                 </div>
-                <div style={{ marginTop: 5, position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 10, background: GRADIENT_PALETTE }}>
-                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1, background: 'rgba(255,255,255,.55)' }} />
-                  <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, background: 'rgba(255,255,255,.55)' }} />
-                  <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,.92)' }} />
+                <div style={{ marginTop: 5, position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 10, background: GRADIENT_PALETTE, overflow: 'hidden' }}>
+                  {/* Groove lines */}
+                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 1px)', width: 2, background: 'rgba(0,0,0,.12)' }} />
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 1px)', height: 2, background: 'rgba(0,0,0,.12)' }} />
+                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 0.5px)', width: 1, background: 'rgba(255,255,255,.45)' }} />
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 0.5px)', height: 1, background: 'rgba(255,255,255,.45)' }} />
+                  <div style={{ position: 'absolute', left: '66%', top: '40%', transform: 'translate(-50%,-50%)', width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,.96)', boxShadow: '0 3px 8px rgba(0,0,0,.25), 0 0 0 1.5px rgba(255,255,255,.6)' }} />
                 </div>
                 <div style={{ marginTop: 8, background: '#fff', borderRadius: 8, padding: 8, fontSize: 8.5, fontWeight: 500, lineHeight: 1.5, color: '#2c2f40' }}>
                   承知いたしました。<br />確認後、対応いたします。
@@ -558,7 +607,7 @@ export default function LandingPage() {
             <h2 style={{ fontSize: 32, fontWeight: 900, color: '#272a3a' }}>
               料金プラン <span style={{ fontSize: 16, fontWeight: 600, color: '#8a8ea0' }}>（今後の予定）</span>
             </h2>
-            <p style={{ marginTop: 12, fontSize: 15, color: '#7a7e90', fontWeight: 500 }}>まずは無料でアーリーアクセスに登録。リリース時に詳細をお知らせします。</p>
+            <p style={{ marginTop: 12, fontSize: 15, color: '#7a7e90', fontWeight: 500 }}>まずは無料で始めましょう。クレジットカード不要、今すぐ利用開始できます。</p>
           </div>
 
           <div className="lp-pricing-grid">
@@ -577,9 +626,9 @@ export default function LandingPage() {
                   <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, fontWeight: 600 }}><GreenCheck />{t}</span>
                 ))}
               </div>
-              <button style={{ marginTop: 26, width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#fff', padding: '15px', borderRadius: 13, background: GRADIENT_BTN }}>
-                アーリーアクセスに登録する
-              </button>
+              <a href="/login" style={{ marginTop: 26, display: 'block', fontSize: 14, fontWeight: 700, color: '#fff', padding: '15px', borderRadius: 13, background: GRADIENT_BTN, textAlign: 'center', textDecoration: 'none' }}>
+                無料で始める
+              </a>
             </div>
 
             {/* Pro — highlighted */}
@@ -600,9 +649,9 @@ export default function LandingPage() {
                     <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, fontWeight: 600 }}><PurpleCheck />{t}</span>
                   ))}
                 </div>
-                <button style={{ marginTop: 26, width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, color: '#fff', padding: '15px', borderRadius: 13, background: GRADIENT_BTN }}>
-                  アーリーアクセスに登録する
-                </button>
+                <a href="/login" style={{ marginTop: 26, display: 'block', fontSize: 14, fontWeight: 700, color: '#fff', padding: '15px', borderRadius: 13, background: GRADIENT_BTN, textAlign: 'center', textDecoration: 'none' }}>
+                  今すぐ試す
+                </a>
               </div>
             </div>
 
@@ -633,17 +682,22 @@ export default function LandingPage() {
             <div style={{ position: 'absolute', bottom: -40, right: 80, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.07)', pointerEvents: 'none' }} />
             <div style={{ position: 'relative' }}>
               <h2 className="lp-cta-h2">言葉に迷わない毎日を、<br />あなたの手に。</h2>
-              <p style={{ marginTop: 10, fontSize: 14.5, color: 'rgba(255,255,255,.88)', fontWeight: 500 }}>今すぐ登録して、リリースの最新情報を受け取りましょう。</p>
+              <p style={{ marginTop: 10, fontSize: 14.5, color: 'rgba(255,255,255,.88)', fontWeight: 500 }}>今すぐ無料で始めて、ビジネスの言葉に迷う時間をゼロにしましょう。</p>
               <div className="lp-cta-checks">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✉ 無料で登録</span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>⏱ リリース時にお知らせ</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✓ クレジットカード不要</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✓ すぐに利用開始</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>✓ いつでも解除OK</span>
               </div>
             </div>
-            <EarlyAccessForm
-              buttonLabel="アーリーアクセスに登録する →"
-              style={{ minWidth: 'min(380px, 100%)' }}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 'min(340px, 100%)' }}>
+              <a href="/login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '17px 28px', borderRadius: 14, background: '#fff', color: '#1c1f2b', textDecoration: 'none', fontSize: 15, fontWeight: 800, boxShadow: '0 8px 28px rgba(0,0,0,.22)', whiteSpace: 'nowrap' }}>
+                <GoogleIcon />
+                Googleで無料登録する
+              </a>
+              <a href="/dashboard" style={{ textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,.8)', textDecoration: 'none', padding: '8px' }}>
+                まずはゲストで試す →
+              </a>
+            </div>
           </div>
         </div>
       </section>

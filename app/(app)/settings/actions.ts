@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -61,4 +62,36 @@ export async function createPortalSession() {
   });
 
   redirect(session.url);
+}
+
+export async function deletePreset(id: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "ログインが必要です" };
+  const { error } = await supabase
+    .from("recipient_presets")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function deleteAccount(): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "ログインが必要です" };
+
+  // ユーザーデータを先に削除（外部キー制約がない場合の安全策）
+  await Promise.all([
+    supabaseAdmin.from("palette_generations").delete().eq("user_id", user.id),
+    supabaseAdmin.from("recipient_presets").delete().eq("user_id", user.id),
+  ]);
+  await supabaseAdmin.from("profiles").delete().eq("id", user.id);
+
+  // Auth ユーザーを削除（Service Role 必須）
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+  if (error) return { error: error.message };
+
+  redirect("/");
 }

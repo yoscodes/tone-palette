@@ -2,8 +2,18 @@
 
 import { useRef, useState } from 'react'
 
+const GRADIENT_PALETTE = 'linear-gradient(135deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 66%,#6a82fb 100%)'
+
+const QUADRANT_LABELS = [
+  { id: 'tl', main: '親密', sub: 'フランク',      pos: { top: '25%', left: '25%' }, isActive: (hx: number, hy: number) => hx < 0.5  && hy >= 0.5 },
+  { id: 'tr', main: '丁寧', sub: '標準的',        pos: { top: '25%', left: '75%' }, isActive: (hx: number, hy: number) => hx >= 0.5 && hy >= 0.5 },
+  { id: 'bl', main: '事務的', sub: '簡潔',        pos: { top: '75%', left: '25%' }, isActive: (hx: number, hy: number) => hx < 0.5  && hy < 0.5  },
+  { id: 'br', main: '厳格', sub: 'かしこまった',  pos: { top: '75%', left: '75%' }, isActive: (hx: number, hy: number) => hx >= 0.5 && hy < 0.5  },
+] as const
+
 export function HeroDemoCard() {
-  const [pos, setPos] = useState({ hx: 0.66, hy: 0.40 })
+  // hy: 1=top（親密/フランク）0=bottom（厳格） ← dashboardと同じ方向
+  const [pos, setPos] = useState({ hx: 0.66, hy: 0.60 })
   const sqRef = useRef<HTMLDivElement>(null)
 
   const clamp = (v: number) => Math.max(0.06, Math.min(0.94, v))
@@ -16,7 +26,7 @@ export function HeroDemoCard() {
       const r = sqRef.current.getBoundingClientRect()
       setPos({
         hx: clamp((clientX - r.left) / r.width),
-        hy: clamp((clientY - r.top) / r.height),
+        hy: clamp(1 - (clientY - r.top) / r.height), // top=1, bottom=0
       })
     }
 
@@ -33,17 +43,35 @@ export function HeroDemoCard() {
   }
 
   const { hx, hy } = pos
-  const formal = hx > 0.5
-  const polite = hy > 0.5
+  const formal = hx >= 0.5
+  const frank  = hy >= 0.5 // top = 親密/フランク
+
   let line1: string, line2: string
-  if (formal && polite) { line1 = '承知いたしました。'; line2 = '確認後、対応いたします。' }
-  else if (formal && !polite) { line1 = '承知しました。'; line2 = '確認のうえ対応します。' }
-  else if (!formal && polite) { line1 = '了解しました。'; line2 = '確認して対応しますね。' }
-  else { line1 = '了解です！'; line2 = '確認しておきますね。' }
+  if (formal && !frank) { line1 = '承知いたしました。';  line2 = '確認後、対応いたします。'   } // 厳格
+  else if (formal && frank)  { line1 = '承知しました。';     line2 = '確認のうえ対応します。'     } // 丁寧
+  else if (!formal && !frank) { line1 = '了解しました。';    line2 = '確認して対応しますね。'     } // 事務的
+  else                        { line1 = '了解です！';         line2 = '確認しておきますね。'       } // 親密
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={{ background: '#fff', borderRadius: 22, padding: '22px 22px 26px', boxShadow: '0 24px 60px rgba(70,60,120,.16)', border: '1px solid rgba(255,255,255,.7)' }}>
+      <style>{`
+        .hero-demo-card { }
+        .hero-palette-wrap { }
+        .hero-demo-annotation { }
+        @media (max-width: 640px) {
+          .hero-demo-card { padding: 16px 16px 20px !important; }
+          .hero-palette-wrap { padding: 12px 0 !important; }
+          .hero-demo-annotation { display: none; }
+        }
+        @media (max-width: 480px) {
+          .hero-palette-wrap { padding: 10px 0 !important; }
+        }
+      `}</style>
+
+      <div className="hero-demo-card" style={{
+        background: '#fff', borderRadius: 22, padding: '22px 22px 26px',
+        boxShadow: '0 24px 60px rgba(70,60,120,.16)', border: '1px solid rgba(255,255,255,.7)',
+      }}>
         {/* Card header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 14, borderBottom: '1px solid #eee' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>依頼する</span>
@@ -62,35 +90,75 @@ export function HeroDemoCard() {
           <span style={{ fontSize: 11, color: '#a3a6b8' }}>4/200</span>
         </div>
 
-        {/* Palette grid */}
-        <div style={{ marginTop: 30, position: 'relative', padding: '30px 56px 34px' }}>
-          <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', fontSize: 11.5, fontWeight: 700, color: '#5c6072', lineHeight: 1.4 }}>
-            親密さ<br /><span style={{ fontWeight: 500, color: '#8a8ea0' }}>フランク（親密）</span>
-          </span>
-          <span style={{ position: 'absolute', left: -2, top: '50%', transform: 'translateY(-50%)', textAlign: 'center', fontSize: 11.5, fontWeight: 700, color: '#5c6072', lineHeight: 1.4, width: 54 }}>
-            カジュアル<br /><span style={{ fontWeight: 500, color: '#8a8ea0' }}>（くだけた）</span>
-          </span>
-          <span style={{ position: 'absolute', right: -2, top: '50%', transform: 'translateY(-50%)', textAlign: 'center', fontSize: 11.5, fontWeight: 700, color: '#5c6072', lineHeight: 1.4, width: 54 }}>
-            フォーマル<br /><span style={{ fontWeight: 500, color: '#8a8ea0' }}>（かしこまった）</span>
-          </span>
-          <span style={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', fontSize: 11.5, fontWeight: 700, color: '#5c6072' }}>
-            丁寧（標準的）
-          </span>
-
+        {/* Palette */}
+        <div className="hero-palette-wrap" style={{ marginTop: 20, position: 'relative', padding: '16px 0' }}>
           {/* Gradient square */}
           <div
             ref={sqRef}
             onPointerDown={handleStart}
-            style={{ position: 'relative', width: '100%', aspectRatio: '1/1', borderRadius: 18, background: 'linear-gradient(135deg,#ff8a5b 0%,#f76b8a 38%,#b06ab3 66%,#6a82fb 100%)', cursor: 'grab', touchAction: 'none', overflow: 'hidden' }}
+            style={{
+              position: 'relative', width: '100%', aspectRatio: '1/1',
+              borderRadius: 18, background: GRADIENT_PALETTE,
+              cursor: 'grab', touchAction: 'none', overflow: 'hidden',
+            }}
           >
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: 'rgba(255,255,255,.55)' }} />
-            <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1.5, background: 'rgba(255,255,255,.55)' }} />
-            {/* Handle */}
-            <div style={{ position: 'absolute', left: `${hx * 100}%`, top: `${hy * 100}%`, transform: 'translate(-50%,-50%)', width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px rgba(0,0,0,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a78c8" strokeWidth="2"><path d="M7 7l-3 3 3 3M17 7l3 3-3 3M7 7h10M10 4l-3 3M14 4l3 3"/></svg>
+            {/* Groove grid lines — ダーク下地 */}
+            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 1px)', width: 3, background: 'rgba(0,0,0,.12)' }} />
+            <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 1px)', height: 3, background: 'rgba(0,0,0,.12)' }} />
+            {/* Groove grid lines — ホワイト上線 */}
+            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 0.5px)', width: 1, background: 'rgba(255,255,255,.45)' }} />
+            <div style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% - 0.5px)', height: 1, background: 'rgba(255,255,255,.45)' }} />
+
+            {/* 象限ウォーターマークラベル */}
+            {QUADRANT_LABELS.map(q => {
+              const active = q.isActive(hx, hy)
+              return (
+                <div
+                  key={q.id}
+                  style={{
+                    position: 'absolute',
+                    top: q.pos.top, left: q.pos.left,
+                    transform: 'translate(-50%, -50%)',
+                    textAlign: 'center', pointerEvents: 'none',
+                    opacity: active ? 0.72 : 0.28,
+                    transition: 'opacity 0.3s ease',
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em', textShadow: '0 1px 4px rgba(0,0,0,.3), 0 2px 10px rgba(0,0,0,.18)' }}>
+                    {q.main}
+                  </div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: '#fff', marginTop: 2, letterSpacing: '0.02em', textShadow: '0 1px 3px rgba(0,0,0,.25)' }}>
+                    {q.sub}
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* カーソルドット（dashboardと同じ4方向矢印）*/}
+            <div style={{
+              position: 'absolute',
+              left: `${(hx * 100).toFixed(1)}%`,
+              top:  `${((1 - hy) * 100).toFixed(1)}%`,
+              transform: 'translate(-50%,-50%)',
+              width: 34, height: 34, borderRadius: '50%',
+              background: 'rgba(255,255,255,.96)',
+              boxShadow: '0 6px 20px rgba(0,0,0,.28), 0 2px 6px rgba(0,0,0,.18), 0 0 0 2px rgba(255,255,255,.6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none', zIndex: 1,
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a78c8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="5,9 2,12 5,15"/><polyline points="9,5 12,2 15,5"/>
+                <polyline points="15,19 12,22 9,19"/><polyline points="19,9 22,12 19,15"/>
+                <line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>
+              </svg>
             </div>
-            {/* Result card */}
-            <div style={{ position: 'absolute', left: 14, right: 14, bottom: 14, background: 'rgba(255,255,255,.96)', borderRadius: 13, padding: '13px 15px', boxShadow: '0 8px 22px rgba(60,40,100,.18)' }}>
+
+            {/* 結果カード（パレット下部に重ねて表示）*/}
+            <div style={{
+              position: 'absolute', left: 14, right: 14, bottom: 14,
+              background: 'rgba(255,255,255,.96)', borderRadius: 13,
+              padding: '13px 15px', boxShadow: '0 8px 22px rgba(60,40,100,.18)',
+            }}>
               <p style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.55, color: '#272a3a' }}>
                 {line1}<br />{line2}
               </p>
@@ -114,7 +182,7 @@ export function HeroDemoCard() {
       </div>
 
       {/* Annotation */}
-      <div style={{ position: 'absolute', top: 108, right: -6, textAlign: 'center', color: '#e85a9b', fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, transform: 'rotate(-4deg)' }}>
+      <div className="hero-demo-annotation" style={{ position: 'absolute', top: 108, right: -6, textAlign: 'center', color: '#e85a9b', fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, transform: 'rotate(-4deg)' }}>
         2軸を直感的に<br />ドラッグするだけ！
         <svg width="46" height="34" viewBox="0 0 46 34" fill="none" style={{ position: 'absolute', left: -30, top: 30 }}>
           <path d="M44 2C30 2 8 6 4 26" stroke="#e85a9b" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 4"/>
