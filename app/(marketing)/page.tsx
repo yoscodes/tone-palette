@@ -221,7 +221,7 @@ export default function LandingPage() {
         <div className="lp-header-inner">
           <Logo />
           <nav className="lp-nav">
-            {[['#features','機能'],['#how','使い方'],['#usecase','ユースケース'],['#pricing','料金プラン'],['#faq','よくある質問']].map(([h,l]) => (
+            {[['#features','機能'],['#how','使い方'],['#usecase','ユースケース'],['#pricing','料金プラン']].map(([h,l]) => (
               <a key={h} href={h} style={{ color: 'inherit', textDecoration: 'none' }}>{l}</a>
             ))}
           </nav>
@@ -521,7 +521,6 @@ export default function LandingPage() {
               <h2 style={{ fontSize: 30, fontWeight: 900, color: '#1c1f2b' }}>よく使う<span style={{ color: '#7b6ad0' }}>5つのシチュエーション</span>で即解決</h2>
               <p style={{ marginTop: 8, fontSize: 14, color: '#7a7e90', fontWeight: 500 }}>どのシーンでも、同じ簡単操作で最適な表現が見つかります。</p>
             </div>
-            <a href="#" className="lp-sit-see-all">すべてのシチュエーションを見る →</a>
           </div>
 
           {/* Tab bar */}
@@ -706,15 +705,6 @@ export default function LandingPage() {
       <footer style={{ borderTop: '1px solid rgba(20,20,40,.06)', background: '#f2f2f6' }}>
         <div className="lp-footer-inner">
           <Logo size={17} />
-          <nav className="lp-footer-nav">
-            {['運営会社', 'プライバシーポリシー', '利用規約', 'お問い合わせ'].map(l => (
-              <a key={l} href="#" style={{ color: 'inherit', textDecoration: 'none' }}>{l}</a>
-            ))}
-          </nav>
-          <div className="lp-footer-social">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 4c-.8.4-1.6.6-2.5.8A4.3 4.3 0 0 0 21.4 3a8.6 8.6 0 0 1-2.7 1A4.3 4.3 0 0 0 11.3 7.8 12.2 12.2 0 0 1 2.4 3.2 4.3 4.3 0 0 0 3.8 9 4.2 4.2 0 0 1 1.9 8.5v.05A4.3 4.3 0 0 0 5.3 12.8a4.3 4.3 0 0 1-1.9.07 4.3 4.3 0 0 0 4 3 8.6 8.6 0 0 1-5.3 1.8A12.1 12.1 0 0 0 8.3 20.6c7.9 0 12.2-6.5 12.2-12.2v-.55A8.7 8.7 0 0 0 22 4z"/></svg>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.5-.95 1.8-1.95 3.65-1.95 3.9 0 4.6 2.55 4.6 5.85V21h-4v-5.5c0-1.3 0-3-1.85-3s-2.15 1.45-2.15 2.9V21H9z"/></svg>
-          </div>
         </div>
       </footer>
 
